@@ -1,0 +1,422 @@
+openapi: 3.0.0
+info:
+  title: API LMS - Plateforme d'Apprentissage Adaptative
+  description: API REST pour la plateforme LMS avec IA, quiz, certificats
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api
+    description: Serveur de développement
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        nom:
+          type: string
+        prenom:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [etudiant, enseignant, admin]
+    Cours:
+      type: object
+      properties:
+        id:
+          type: integer
+        titre:
+          type: string
+        description:
+          type: string
+        niveau:
+          type: string
+          enum: [debutant, intermediaire, avance]
+        categorie:
+          type: string
+        id_enseignant:
+          type: integer
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        titre:
+          type: string
+        nb_questions:
+          type: integer
+        duree_minutes:
+          type: integer
+        note_passage:
+          type: number
+    Certificat:
+      type: object
+      properties:
+        id:
+          type: integer
+        code_unique:
+          type: string
+        date_delivrance:
+          type: string
+          format: date
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ==================== AUTHENTIFICATION ====================
+  /auth/register:
+    post:
+      summary: "Inscription d'un nouvel utilisateur"
+      tags: [Authentification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nom
+                - prenom
+                - email
+                - mot_de_passe
+              properties:
+                nom:
+                  type: string
+                prenom:
+                  type: string
+                email:
+                  type: string
+                mot_de_passe:
+                  type: string
+                  minLength: 6
+                role:
+                  type: string
+                  enum: [etudiant, enseignant, admin]
+                  default: etudiant
+      responses:
+        201:
+          description: "Compte créé avec succès"
+          content:
+            application/json:
+              example:
+                message: "Compte créé avec succès"
+                user: { id: 1, nom: "Dupont", prenom: "Jean", email: "jean@test.com", role: "etudiant" }
+                token: "1|abcdef123456..."
+        422:
+          description: "Erreur de validation"
+
+  /auth/login:
+    post:
+      summary: "Connexion utilisateur"
+      tags: [Authentification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - mot_de_passe
+              properties:
+                email:
+                  type: string
+                mot_de_passe:
+                  type: string
+      responses:
+        200:
+          description: "Connexion réussie"
+          content:
+            application/json:
+              example:
+                message: "Connexion réussie"
+                token: "2|abcdef123456..."
+                user: { id: 1, nom: "Dupont", prenom: "Jean", email: "jean@test.com", role: "etudiant" }
+        401:
+          description: "Email ou mot de passe incorrect"
+
+  /auth/logout:
+    post:
+      summary: "Déconnexion"
+      tags: [Authentification]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Déconnecté avec succès"
+
+  /auth/user:
+    get:
+      summary: "Récupérer l'utilisateur connecté"
+      tags: [Authentification]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Succès"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ==================== COURS ====================
+  /cours:
+    get:
+      summary: "Lister tous les cours"
+      tags: [Cours]
+      responses:
+        200:
+          description: "Liste des cours"
+          content:
+            application/json:
+              example:
+                cours: [{ id: 1, titre: "Laravel", niveau: "debutant", categorie: "Programmation" }]
+
+  /cours/{id}:
+    get:
+      summary: "Détails d'un cours"
+      tags: [Cours]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Détails du cours"
+        404:
+          description: "Cours non trouvé"
+
+  /cours:
+    post:
+      summary: "Créer un cours (enseignant uniquement)"
+      tags: [Cours]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - titre
+                - niveau
+                - categorie
+              properties:
+                titre:
+                  type: string
+                description:
+                  type: string
+                niveau:
+                  type: string
+                  enum: [debutant, intermediaire, avance]
+                categorie:
+                  type: string
+      responses:
+        201:
+          description: "Cours créé"
+        403:
+          description: "Non autorisé"
+
+  /cours/{id}/inscrire:
+    post:
+      summary: "S'inscrire à un cours (étudiant uniquement)"
+      tags: [Cours]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        201:
+          description: "Inscription réussie"
+        403:
+          description: "Non autorisé"
+        400:
+          description: "Déjà inscrit"
+
+  # ==================== QUIZ ====================
+  /quiz/{id}:
+    get:
+      summary: "Récupérer un quiz avec ses questions"
+      tags: [Quiz]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Quiz récupéré"
+        404:
+          description: "Quiz non trouvé"
+
+  /quiz/{id}/soumettre:
+    post:
+      summary: "Soumettre les réponses d'un quiz"
+      tags: [Quiz]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reponses
+              properties:
+                reponses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      question_id:
+                        type: integer
+                      reponse_id:
+                        type: integer
+      responses:
+        200:
+          description: "Quiz soumis avec succès"
+          content:
+            application/json:
+              example:
+                message: "Quiz soumis avec succès"
+                score: 100
+                reussi: true
+                feedback: "Bravo !"
+
+  # ==================== CERTIFICATS ====================
+  /certificats:
+    post:
+      summary: "Générer un certificat"
+      tags: [Certificats]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_cours
+              properties:
+                id_cours:
+                  type: integer
+      responses:
+        201:
+          description: "Certificat généré"
+        403:
+          description: "Non autorisé"
+
+  /certificats/verifier/{code}:
+    get:
+      summary: "Vérifier un certificat (public)"
+      tags: [Certificats]
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Certificat valide"
+
+  /etudiant/{id}/certificats:
+    get:
+      summary: "Liste des certificats d'un étudiant"
+      tags: [Certificats]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Liste des certificats"
+
+  # ==================== IA ====================
+  /recommend/{id}:
+    get:
+      summary: "Recommandations de cours (IA)"
+      tags: [IA]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Liste des cours recommandés"
+
+  # ==================== ANALYTICS ====================
+  /analytics/etudiant/{id}:
+    get:
+      summary: "KPIs pour un étudiant"
+      tags: [Analytics]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Statistiques étudiant"
+
+  /analytics/cours/{id}:
+    get:
+      summary: "KPIs pour un cours"
+      tags: [Analytics]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Statistiques cours"
+
+  /analytics/global:
+    get:
+      summary: "KPIs globaux (admin)"
+      tags: [Analytics]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Statistiques globales"
+        403:
+          description: "Non autorisé"
