@@ -9,11 +9,6 @@ use App\Http\Controllers\IAController;
 use App\Http\Controllers\RecommendController;
 use App\Http\Controllers\AnalyticsController;
 
-Route::get('/recommend/{id}', [RecommendController::class, 'getRecommandations']);
-Route::get('/ia/recommandations/{id}', [IAController::class, 'getRecommandations']);
-Route::get('/ia/suggestions/{id}', [IAController::class, 'suggestionSimple']);
-
-
 // Routes publiques
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -22,11 +17,10 @@ Route::get('/quiz/{id}', [QuizController::class, 'show']);
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong']);
 });
-
-// Route publique pour vérifier un certificat
 Route::get('/certificats/verifier/{code}', [CertificatController::class, 'verifier']);
+Route::get('/recommend/{id}', [RecommendController::class, 'getRecommandations']);
 
-// Routes protégées
+// Routes protégées par authentification
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/user', [AuthController::class, 'user']);
@@ -38,8 +32,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/certificats', [CertificatController::class, 'generer']);
     Route::get('/certificats/{id}/telecharger', [CertificatController::class, 'telecharger']);
     Route::get('/etudiant/{id}/certificats', [CertificatController::class, 'getCertificatsEtudiant']);
-     Route::get('/ia/recommandations/{id}', [IAController::class, 'getRecommandations']);
+    Route::get('/ia/recommandations/{id}', [IAController::class, 'getRecommandations']);
     Route::get('/ia/suggestions/{id}', [IAController::class, 'suggestionSimple']);
+    
+    // ⚠️ ROUTES ANALYTICS (ajoutées ici)
     Route::get('/analytics/etudiant/{id}', [AnalyticsController::class, 'kpisEtudiant']);
     Route::get('/analytics/cours/{id}', [AnalyticsController::class, 'kpisCours']);
     Route::get('/analytics/global', [AnalyticsController::class, 'kpisGlobal']);

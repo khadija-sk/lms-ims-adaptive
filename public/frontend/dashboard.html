@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMS Adaptive - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #d4af37;
+            --primary-dark: #b8941f;
+            --dark-bg: #0f1419;
+            --card-bg: #1a1f2e;
+            --text-light: #e4e6eb;
+            --text-muted: #9ca3af;
+            --accent: #6366f1;
+            --success: #10b981;
+            --error: #ef4444;
+            --sidebar-width: 280px;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--dark-bg); color: var(--text-light); }
+        .dashboard { display: flex; height: 100vh; }
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #0f1419 0%, #1a1f2e 100%);
+            border-right: 1px solid rgba(212, 175, 55, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(212, 175, 55, 0.1); }
+        .logo { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sidebar-nav { flex: 1; }
+        .nav-section { padding: 1.5rem 0; }
+        .nav-label { padding: 0.5rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover, .nav-item.active { color: var(--primary); background: rgba(212, 175, 55, 0.1); border-left-color: var(--primary); }
+        .sidebar-footer { padding: 1.5rem; border-top: 1px solid rgba(212, 175, 55, 0.1); }
+        .user-card { background: rgba(212, 175, 55, 0.05); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
+        .user-name { font-weight: 600; font-size: 0.9rem; }
+        .user-role { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+        .btn-logout { width: 100%; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error); color: var(--error); border-radius: 0.5rem; cursor: pointer; }
+        .main-content { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; }
+        .top-bar { background: var(--card-bg); border-bottom: 1px solid rgba(212, 175, 55, 0.1); padding: 1.5rem; display: flex; justify-content: space-between; }
+        .breadcrumb { font-size: 0.9rem; color: var(--text-muted); }
+        .breadcrumb strong { color: var(--text-light); }
+        .search-box { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 0.5rem; padding: 0.75rem 1rem; color: var(--text-light); width: 250px; }
+        .content-area { flex: 1; overflow-y: auto; padding: 2rem; }
+        .page-title { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: var(--card-bg); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 0.75rem; padding: 1.5rem; transition: all 0.3s ease; }
+        .card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .card-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .card-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; }
+        .course-card { background: var(--card-bg); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 0.75rem; overflow: hidden; margin-bottom: 1rem; }
+        .course-card:hover { border-color: var(--primary); transform: translateY(-4px); }
+        .course-header { background: linear-gradient(135deg, var(--primary), var(--accent)); padding: 1rem; color: var(--dark-bg); }
+        .course-title { font-size: 1.1rem; font-weight: 600; }
+        .course-body { padding: 1rem; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: var(--dark-bg); }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .hidden { display: none; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } .main-content { margin-left: 0; } .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="logo">💡 IMS</div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section" id="studentMenu">
+                <div class="nav-label">Navigation</div>
+                <div class="nav-item active" data-page="student-dashboard"><span class="nav-icon">📊</span><span>Tableau de Bord</span></div>
+                <div class="nav-item" data-page="my-courses"><span class="nav-icon">📚</span><span>Mes Cours</span></div>
+                <div class="nav-item" data-page="available-courses"><span class="nav-icon">🔍</span><span>Découvrir</span></div>
+                <div class="nav-item" data-page="my-certificates"><span class="nav-icon">🏆</span><span>Certificats</span></div>
+                <div class="nav-item" data-page="my-analytics"><span class="nav-icon">📈</span><span>Mes Statistiques</span></div>
+            </div>
+            <div class="nav-section hidden" id="teacherMenu"></div>
+            <div class="nav-section hidden" id="adminMenu"></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card"><div class="user-name" id="sidebarUserName">Utilisateur</div><div class="user-role" id="sidebarUserRole">Rôle</div></div>
+            <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+        </div>
+    </aside>
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="top-bar-left"><div class="breadcrumb"><strong id="currentPageName">Dashboard</strong> / <span id="currentDateTime">--:--</span></div></div>
+            <div class="top-bar-right"><input type="text" class="search-box" placeholder="Rechercher..."></div>
+        </div>
+        <div class="content-area">
+            <!-- Dashboard principal -->
+            <div class="page" id="student-dashboard">
+                <h1 class="page-title">Bienvenue</h1>
+                <p class="page-subtitle">Votre parcours d'apprentissage personnalisé</p>
+                <div class="grid grid-3">
+                    <div class="card"><div class="card-icon">📚</div><div class="card-title">Cours Actifs</div><div class="card-value" id="activeCoursesCount">0</div></div>
+                    <div class="card"><div class="card-icon">🏆</div><div class="card-title">Certificats</div><div class="card-value" id="certificatesCount">0</div></div>
+                    <div class="card"><div class="card-icon">📊</div><div class="card-title">Score Moyen</div><div class="card-value" id="avgScore">0%</div></div>
+                </div>
+                <h2 style="margin: 2rem 0 1rem; color: var(--primary);">Cours Recommandés</h2>
+                <div id="recommendedCourses">Chargement...</div>
+            </div>
+
+            <!-- Mes Cours -->
+            <div class="page hidden" id="my-courses">
+                <h1 class="page-title">Mes Cours</h1>
+                <p class="page-subtitle">Votre progression</p>
+                <div id="myCoursesList">Chargement...</div>
+            </div>
+
+            <!-- Découvrir (tous les cours) -->
+            <div class="page hidden" id="available-courses">
+                <h1 class="page-title">Découvrir les Cours</h1>
+                <p class="page-subtitle">Tous les cours disponibles</p>
+                <div id="allCoursesList">Chargement...</div>
+            </div>
+
+            <!-- Certificats -->
+            <div class="page hidden" id="my-certificates">
+                <h1 class="page-title">Mes Certificats</h1>
+                <p class="page-subtitle">Vos réalisations</p>
+                <div id="certificatesList">Chargement...</div>
+            </div>
+
+            <!-- Statistiques détaillées -->
+            <div class="page hidden" id="my-analytics">
+                <h1 class="page-title">Mes Statistiques</h1>
+                <p class="page-subtitle">Analyse détaillée</p>
+                <div id="analyticsDetail">Chargement...</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="api-client.js"></script>
+<script>
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const authToken = localStorage.getItem('auth_token');
+    if (!authToken) window.location.href = 'auth-login-drag.html';
+
+    const userId = currentUser.id || 3;
+    
+    document.getElementById('sidebarUserName').textContent = `${currentUser.prenom || ''} ${currentUser.nom || ''}`;
+    document.getElementById('sidebarUserRole').textContent = currentUser.role?.toUpperCase() || 'ETUDIANT';
+
+    function initializeMenu() {
+        document.getElementById('studentMenu').classList.remove('hidden');
+    }
+    initializeMenu();
+
+    function switchPage(pageName) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        const selected = document.getElementById(pageName);
+        if (selected) selected.classList.remove('hidden');
+        document.getElementById('currentPageName').textContent = selected?.querySelector('.page-title')?.textContent || 'Dashboard';
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelector(`.nav-item[data-page="${pageName}"]`)?.classList.add('active');
+        
+        // Charger les données selon la page
+        if (pageName === 'my-courses') loadMyCourses();
+        else if (pageName === 'available-courses') loadAllCourses();
+        else if (pageName === 'my-certificates') loadCertificates();
+        else if (pageName === 'my-analytics') loadDetailedAnalytics();
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => switchPage(item.dataset.page));
+    });
+
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById('currentDateTime').textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        apiClient.logout();
+        localStorage.clear();
+        window.location.href = 'auth-login-drag.html';
+    });
+
+    window.enrollAndRefresh = async function(courseId) {
+        try {
+            await apiClient.enrollCourse(courseId);
+            alert('Inscription réussie !');
+            location.reload();
+        } catch (err) {
+            alert('Erreur : ' + (err.message || 'Inscription impossible'));
+        }
+    };
+
+    // Dashboard principal
+    apiClient.getStudentAnalytics(userId)
+        .then(data => {
+            if (data.statistiques_globales) {
+                document.getElementById('activeCoursesCount').textContent = data.statistiques_globales.cours_inscrits || 0;
+                document.getElementById('certificatesCount').textContent = data.statistiques_globales.quiz_reussis || 0;
+                document.getElementById('avgScore').textContent = data.statistiques_globales.score_moyen + '%';
+            }
+        })
+        .catch(err => console.error(err));
+
+    apiClient.getRecommendations(userId)
+        .then(data => {
+            const container = document.getElementById('recommendedCourses');
+            if (data.recommandations && data.recommandations.length > 0) {
+                container.innerHTML = data.recommandations.map(c => `
+                    <div class="course-card">
+                        <div class="course-header"><div class="course-title">${c.titre}</div></div>
+                        <div class="course-body">
+                            <p>${c.description || ''}</p>
+                            <p>Niveau: ${c.niveau} | Catégorie: ${c.categorie}</p>
+                            <button class="btn btn-primary" onclick="enrollAndRefresh(${c.id})">S'inscrire</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="card">Aucun cours recommandé</div>';
+            }
+        })
+        .catch(err => console.error(err));
+
+    // Mes Cours (cours où l'étudiant est inscrit)
+    async function loadMyCourses() {
+        try {
+            const data = await apiClient.getAllCourses();
+            const enrolledIds = []; // À remplacer par un vrai appel API pour récupérer les inscriptions
+            const myCourses = data.cours.filter(c => enrolledIds.includes(c.id));
+            const container = document.getElementById('myCoursesList');
+            if (myCourses.length > 0) {
+                container.innerHTML = myCourses.map(c => `
+                    <div class="course-card">
+                        <div class="course-header"><div class="course-title">${c.titre}</div></div>
+                        <div class="course-body">
+                            <p>${c.description || ''}</p>
+                            <p>Niveau: ${c.niveau} | Catégorie: ${c.categorie}</p>
+                            <button class="btn btn-primary" onclick="window.location.href='quiz.html?id=${c.id}'">Voir Quiz</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="card">Vous n\'êtes inscrit à aucun cours</div>';
+            }
+        } catch (err) {
+            document.getElementById('myCoursesList').innerHTML = '<div class="card">Erreur de chargement</div>';
+        }
+    }
+
+    // Tous les cours disponibles
+    async function loadAllCourses() {
+        try {
+            const data = await apiClient.getAllCourses();
+            const container = document.getElementById('allCoursesList');
+            if (data.cours && data.cours.length > 0) {
+                container.innerHTML = data.cours.map(c => `
+                    <div class="course-card">
+                        <div class="course-header"><div class="course-title">${c.titre}</div></div>
+                        <div class="course-body">
+                            <p>${c.description || ''}</p>
+                            <p>Niveau: ${c.niveau} | Catégorie: ${c.categorie}</p>
+                            <button class="btn btn-primary" onclick="enrollAndRefresh(${c.id})">S'inscrire</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="card">Aucun cours disponible</div>';
+            }
+        } catch (err) {
+            document.getElementById('allCoursesList').innerHTML = '<div class="card">Erreur de chargement</div>';
+        }
+    }
+
+    // Certificats
+    async function loadCertificates() {
+        try {
+            const data = await apiClient.getStudentCertificates(userId);
+            const container = document.getElementById('certificatesList');
+            if (data.certificats && data.certificats.length > 0) {
+                container.innerHTML = data.certificats.map(c => `
+                    <div class="card">
+                        <div class="card-icon">🎓</div>
+                        <div class="card-title">Certificat</div>
+                        <div class="card-value">${c.code_unique}</div>
+                        <p>Date: ${new Date(c.date_delivrance).toLocaleDateString()}</p>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="card">Aucun certificat pour le moment</div>';
+            }
+        } catch (err) {
+            document.getElementById('certificatesList').innerHTML = '<div class="card">Erreur de chargement</div>';
+        }
+    }
+
+    // Statistiques détaillées
+    async function loadDetailedAnalytics() {
+        try {
+            const data = await apiClient.getStudentAnalytics(userId);
+            const container = document.getElementById('analyticsDetail');
+            const stats = data.statistiques_globales || {};
+            const progression = data.progression_par_cours || [];
+            container.innerHTML = `
+                <div class="grid">
+                    <div class="card"><div class="card-title">Score Moyen</div><div class="card-value">${stats.score_moyen || 0}%</div></div>
+                    <div class="card"><div class="card-title">Taux Réussite</div><div class="card-value">${stats.taux_reussite || 0}%</div></div>
+                    <div class="card"><div class="card-title">Quiz Totaux</div><div class="card-value">${stats.quiz_totaux || 0}</div></div>
+                </div>
+                <h3>Progression par Cours</h3>
+                ${progression.map(p => `
+                    <div class="course-card">
+                        <div class="course-header"><div class="course-title">${p.cours_titre}</div></div>
+                        <div class="course-body">
+                            <p>Quiz terminés: ${p.quiz_termines}/${p.quiz_total}</p>
+                            <p>Quiz réussis: ${p.quiz_reussis}</p>
+                            <p>Progression: ${p.progression}%</p>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        } catch (err) {
+            document.getElementById('analyticsDetail').innerHTML = '<div class="card">Erreur de chargement</div>';
+        }
+    }
+</script>
+</body>
+</html>
