@@ -1,14 +1,14 @@
-# 🎓 Adaptive LMS Platform
+# Adaptive LMS Platform
 
-A team-based **Learning Management System (LMS)** designed to support online learning through course management, quizzes, certificates, and learning analytics.
+A team-based Learning Management System (LMS) designed to support online learning through course management, quizzes, certificates, and learning analytics.
 
-The project was developed as a collaborative software engineering project using **Laravel** and a REST API architecture.
+The project was developed as a collaborative software engineering project using Laravel and a REST API architecture.
 
 ---
 
-## 📋 Project Overview
+## Project Overview
 
-The platform provides core functionality for managing digital learning environments, including:
+The platform provides functionality for managing a digital learning environment, including:
 
 * Course and learning content management
 * User authentication
@@ -17,11 +17,11 @@ The platform provides core functionality for managing digital learning environme
 * Learning analytics
 * REST API integration
 
-The project focuses on building a structured backend for an adaptive learning platform.
+The project focuses on developing a structured backend for an adaptive learning platform.
 
 ---
 
-## 👥 Team Project
+## Team Project
 
 This project was developed collaboratively as part of a team.
 
@@ -31,17 +31,17 @@ This project was developed collaboratively as part of a team.
 
 My main responsibilities included:
 
-* Backend development with **Laravel**
+* Backend development with Laravel
 * REST API development
 * Authentication and authorization
 * Database integration
 * API testing and validation
 * Quality assurance
-* Supporting project delivery and integration
+* Supporting project integration and delivery
 
 ---
 
-## 🛠️ Technologies
+## Technologies
 
 | Category       | Technologies              |
 | -------------- | ------------------------- |
@@ -53,34 +53,36 @@ My main responsibilities included:
 
 ---
 
-## 🏗️ Backend Architecture
+## Backend Architecture
 
 The backend follows Laravel's application architecture and exposes functionality through REST APIs.
 
 ```text
 Client / Frontend
-       │
-       ▼
+       |
+       v
    REST API
-       │
-       ▼
+       |
+       v
  Laravel Backend
-       │
- ┌─────┼─────────────┐
- ▼     ▼             ▼
-Auth  Business     Data
-      Logic        Access
-       │             │
-       └──────┬──────┘
-              ▼
-        MySQL / PostgreSQL
+       |
+  +----+------------+
+  |    |            |
+  v    v            v
+ Auth  Business    Data
+       Logic       Access
+        |            |
+        +-----+------+
+              |
+              v
+       MySQL / PostgreSQL
 ```
 
-Authentication is handled using **Laravel Sanctum**.
+Authentication is handled using Laravel Sanctum.
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -141,7 +143,7 @@ http://127.0.0.1:8000
 
 ---
 
-## 📌 Main Concepts
+## Main Concepts
 
 The project provided practical experience with:
 
@@ -155,13 +157,13 @@ The project provided practical experience with:
 
 ---
 
-## 🎯 Project Objective
+## Project Objective
 
 The objective of the project was to develop the backend foundation of an LMS platform while applying modern web development practices and collaborative software engineering workflows.
 
 ---
 
-## 👩‍💻 Author
+## Author
 
 **Khadija Sayoukh**
 
